@@ -2,6 +2,10 @@ const express = require("express");
 const app = express();
 const apiRoutes = require("./routes/api");
 const sequelize = require("./config/database");
+require("./models/user"); // Users modelini yükleme
+require("./models/customer"); // Customers modelini yükleme
+require("./models/room"); // Rooms modelini yükleme
+require("./models/reservation"); // Reservations modelini yükleme
 require("dotenv").config();
 
 app.use(express.json());
