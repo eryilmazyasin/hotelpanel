@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const apiRoutes = require("./routes/api");
-const sequelize = require("./config/database");
+const sequelize = require("./config/database"); // sequelize örneğini doğru şekilde alıyoruz
 require("./models/user"); // Users modelini yükleme
 require("./models/customer"); // Customers modelini yükleme
 require("./models/room"); // Rooms modelini yükleme

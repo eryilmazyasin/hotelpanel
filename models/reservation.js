@@ -1,7 +1,7 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../config/database");
 const Room = require("./room");
 const Customer = require("./customer");
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
 const Reservation = sequelize.define(
   "Reservation",
