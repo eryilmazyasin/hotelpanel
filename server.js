@@ -3,19 +3,20 @@ require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
 const SequelizeStore = require("connect-session-sequelize")(session.Store);
-const sequelize = require("./config/database"); // sequelize örneğini doğru şekilde alıyoruz
+const sequelize = require("./config/database");
 const apiRoutes = require("./routes/api");
-const authRoutes = require("./routes/auth"); // Auth routes'u ekliyoruz
-require("./models/user"); // Users modelini yükleme
-require("./models/customer"); // Customers modelini yükleme
-require("./models/room"); // Rooms modelini yükleme
-require("./models/reservation"); // Reservations modelini yükleme
+const authRoutes = require("./routes/auth");
+
+require("./models/user");
+require("./models/customer");
+require("./models/room");
+require("./models/reservation");
 
 const app = express();
 
 app.use(express.json());
 
-// Session middleware ekliyoruz
+// Session middleware
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "your_secret_key",
@@ -52,7 +53,7 @@ sequelize
   .authenticate()
   .then(() => {
     console.log("Database connected...");
-    return sequelize.sync(); // Veritabanı tablolarını sync etme (development için)
+    return sequelize.sync({ alter: true });
   })
   .then(() => {
     app.listen(PORT, () => {
