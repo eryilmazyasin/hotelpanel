@@ -1,13 +1,13 @@
 const express = require("express");
+const jwt = require("jsonwebtoken");
 const router = express.Router();
-const User = require("../models/user"); // User modelini içe aktar
+const User = require("../models/user");
+
+const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
 
 // Login route
 router.post("/login", async (req, res) => {
-  console.log("Login route hit");
   const { name, password } = req.body;
-
-  console.log({ req, res });
 
   try {
     const user = await User.findOne({ where: { name } });
@@ -20,10 +20,12 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid password" });
     }
 
-    req.session.userId = user.id;
-    console.log("User authenticated, session created");
+    // Kullanıcıyı doğrula ve JWT oluştur
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
+      expiresIn: "1d",
+    });
 
-    return res.json({ message: "Login successful", user: req.session.user });
+    return res.json({ message: "Login successful", token });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
@@ -32,13 +34,13 @@ router.post("/login", async (req, res) => {
 
 // Logout route
 router.post("/logout", (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ message: "Could not log out" });
-    }
-    res.clearCookie("connect.sid");
-    return res.json({ message: "Logout successful" });
-  });
+  // JWT'yi tarayıcıdan kaldırmak için sadece frontend tarafında token'ı silmek yeterli
+  return res.json({ message: "Logout successful" });
+});
+
+// Check session route (Artık bu gereksiz)
+router.get("/check-session", (req, res) => {
+  res.status(404).json({ message: "Route not available with JWT" });
 });
 
 module.exports = router;

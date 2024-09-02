@@ -1,10 +1,9 @@
 require("dotenv").config();
 
 const express = require("express");
-const session = require("express-session");
-const SequelizeStore = require("connect-session-sequelize")(session.Store);
+const jwt = require("jsonwebtoken");
+const cors = require("cors");
 const sequelize = require("./config/database");
-const cors = require("cors"); // CORS paketini ekliyoruz
 const apiRoutes = require("./routes/api");
 const authRoutes = require("./routes/auth");
 
@@ -14,19 +13,17 @@ require("./models/room");
 require("./models/reservation");
 
 const app = express();
+const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
 
-// CORS ayarları
 app.use(
   cors({
-    origin: "http://localhost:3000", // React uygulamanızın çalıştığı adres
-    credentials: true, // Tarayıcıdan gelen session cookie'lerinin gönderilebilmesi için gerekli
+    origin: "http://localhost:3000",
+    credentials: true,
   })
 );
 
-// Tüm yollar için CORS ayarları ile OPTIONS isteklerini yanıtlar
 app.options("*", cors());
 
-// Preflight istekler için yanıtlar
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "http://localhost:3000");
   res.header("Access-Control-Allow-Credentials", "true");
@@ -37,7 +34,7 @@ app.use((req, res, next) => {
   );
 
   if (req.method === "OPTIONS") {
-    return res.sendStatus(200); // Preflight istek için başarılı bir yanıt gönderiyoruz
+    return res.sendStatus(200);
   }
 
   next();
@@ -45,38 +42,24 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// Session middleware
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "your_secret_key",
-    resave: false,
-    saveUninitialized: false,
-    store: new SequelizeStore({
-      db: sequelize,
-    }),
-    cookie: {
-      maxAge: 1000 * 60 * 60 * 24, // 1 day
-      sameSite: "None", // çapraz kaynaklı istekler için gerekli
-      secure: false, // HTTPS kullanıyorsanız true yapmalısınızmaxAge: 1000 * 60 * 60 * 24, // 1 day
-    },
-    rolling: true, // Her istek cookie maxAge süresini sıfırlar
-  })
-);
+// JWT Middleware
+const authMiddleware = (req, res, next) => {
+  const token = req.headers["authorization"]?.split(" ")[1]; // "Bearer <token>" yapısından token'ı al
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 
-// Auth Routes
-app.use("/auth", authRoutes);
-
-// Protected API Routes
-app.use(
-  "/api",
-  (req, res, next) => {
-    if (!req.session.userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ message: "Forbidden" });
     }
+    req.user = decoded; // decoded.userId ile kullanıcının id'sine erişebilirsiniz
     next();
-  },
-  apiRoutes
-);
+  });
+};
+
+app.use("/auth", authRoutes);
+app.use("/api", authMiddleware, apiRoutes);
 
 const PORT = process.env.PORT || 5001;
 
