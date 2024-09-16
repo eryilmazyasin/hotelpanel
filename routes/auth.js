@@ -38,9 +38,4 @@ router.post("/logout", (req, res) => {
   return res.json({ message: "Logout successful" });
 });
 
-// Check session route (Artık bu gereksiz)
-router.get("/check-session", (req, res) => {
-  res.status(404).json({ message: "Route not available with JWT" });
-});
-
 module.exports = router;
