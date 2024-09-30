@@ -40,6 +40,14 @@ module.exports = {
         type: Sequelize.DECIMAL(10, 2),
         allowNull: false,
       },
+      total_price: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+      },
+      price_per_night: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

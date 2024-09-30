@@ -15,7 +15,7 @@ const Reservation = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: Room,
+        model: Room, // Room modeline referans
         key: "id",
       },
     },
@@ -23,7 +23,7 @@ const Reservation = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: Customer,
+        model: Customer, // Customer modeline referans
         key: "id",
       },
     },
@@ -43,15 +43,15 @@ const Reservation = sequelize.define(
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
+    price_per_night: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+    },
   },
   {
     tableName: "reservations",
     timestamps: true,
   }
 );
-
-// İlişkileri tanımlama
-Reservation.belongsTo(Room, { foreignKey: "room_id" });
-Reservation.belongsTo(Customer, { foreignKey: "customer_id" });
 
 module.exports = Reservation;

@@ -11,6 +11,7 @@ require("./models/user");
 require("./models/customer");
 require("./models/room");
 require("./models/reservation");
+require("./models/associations");
 
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
