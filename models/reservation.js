@@ -41,7 +41,7 @@ const Reservation = sequelize.define(
     },
     total_price: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
+      allowNull: true,
     },
     price_per_night: {
       type: DataTypes.DECIMAL(10, 2),

@@ -32,7 +32,8 @@ router.post("/", async (req, res) => {
   try {
     const reservation = await Reservation.create(req.body);
     await Room.update(
-      { is_available: false },
+      // { is_available: false },
+      { is_reserved: true },
       { where: { id: req.body.room_id } }
     );
     res.status(201).json(reservation);

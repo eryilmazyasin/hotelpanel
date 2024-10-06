@@ -15,7 +15,7 @@ const Customer = sequelize.define(
     },
     last_name: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     phone_number: {
       type: DataTypes.STRING,
@@ -23,7 +23,7 @@ const Customer = sequelize.define(
     },
     national_id: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
       unique: true,
     },
     notes: {
