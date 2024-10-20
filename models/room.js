@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../config/database");
+const sequelize = require("../config/sequelize"); // Doğru sequelize nesnesi
 
 const Room = sequelize.define(
   "Room",

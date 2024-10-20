@@ -3,15 +3,18 @@ require("dotenv").config();
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
-const sequelize = require("./config/database");
+const sequelize = require("./config/sequelize"); // config/database.js değil!
+
 const apiRoutes = require("./routes/api");
 const authRoutes = require("./routes/auth");
 
+// Modelleri içe aktarıyoruz
 require("./models/user");
 require("./models/customer");
 require("./models/room");
 require("./models/reservation");
-require("./models/associations");
+require("./models/associations"); // İlişkiler buraya tanımlanmış olmalı
+require("./models/reservationCustomer"); // ReservationCustomer modelini de buraya ekliyoruz
 
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
@@ -45,7 +48,7 @@ app.use(express.json());
 
 // JWT Middleware
 const authMiddleware = (req, res, next) => {
-  const token = req.headers["authorization"]?.split(" ")[1]; // "Bearer <token>" yapısından token'ı al
+  const token = req.headers["authorization"]?.split(" ")[1];
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
   }
@@ -54,7 +57,7 @@ const authMiddleware = (req, res, next) => {
     if (err) {
       return res.status(403).json({ message: "Forbidden" });
     }
-    req.user = decoded; // decoded.userId ile kullanıcının id'sine erişebilirsiniz
+    req.user = decoded;
     next();
   });
 };
@@ -68,7 +71,7 @@ sequelize
   .authenticate()
   .then(() => {
     console.log("Database connected...");
-    return sequelize.sync({ alter: true });
+    return sequelize.sync({ alter: true }); // Tablo oluşturma işlemi burada gerçekleşir
   })
   .then(() => {
     app.listen(PORT, () => {

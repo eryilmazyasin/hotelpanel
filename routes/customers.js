@@ -26,26 +26,56 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Create a new customer
+// Create multiple customers (or a single one)
 router.post("/", async (req, res) => {
   try {
-    const customer = await Customer.create(req.body);
-    res.status(201).json(customer);
+    // Eğer veri diziyse toplu ekleme, değilse tek ekleme yapar.
+    if (Array.isArray(req.body)) {
+      // Toplu müşteri ekleme
+      const customers = await Customer.bulkCreate(req.body, {
+        validate: true, // Doğrulama işlemini yap
+        ignoreDuplicates: true, // Aynı TC kimlik numarası varsa atla
+      });
+      res.status(201).json(customers);
+    } else {
+      // Tek müşteri ekleme
+      const customer = await Customer.create(req.body);
+      res.status(201).json(customer);
+    }
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    if (err.name === "SequelizeUniqueConstraintError") {
+      res.status(400).json({ error: "National ID must be unique" });
+    } else {
+      res.status(500).json({ error: err.message });
+    }
   }
 });
 
-// Update a customer by ID
-router.put("/:id", async (req, res) => {
+// Update multiple customers or a single customer by ID
+router.put("/", async (req, res) => {
   try {
-    const customer = await Customer.findByPk(req.params.id);
-    if (customer) {
+    // Eğer gelen veri bir dizi değilse, tekli güncelleme yapar
+    if (!Array.isArray(req.body)) {
+      const customer = await Customer.findByPk(req.body.id);
+      if (!customer) {
+        return res.status(404).json({ error: `Customer not found` });
+      }
       await customer.update(req.body);
-      res.json(customer);
-    } else {
-      res.status(404).json({ error: "Customer not found" });
+      return res.json(customer);
     }
+
+    // Bir dizi varsa, toplu güncelleme yapar
+    const updatePromises = req.body.map(async (customerData) => {
+      const customer = await Customer.findByPk(customerData.id);
+      if (customer) {
+        return customer.update(customerData);
+      } else {
+        return Promise.reject(`Customer with id ${customerData.id} not found`);
+      }
+    });
+
+    const updatedCustomers = await Promise.all(updatePromises);
+    res.json(updatedCustomers);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -14,7 +14,7 @@ module.exports = {
       },
       last_name: {
         type: Sequelize.STRING,
-        allowNull: false,
+        allowNull: true, // Optional
       },
       phone_number: {
         type: Sequelize.STRING,
@@ -22,8 +22,7 @@ module.exports = {
       },
       national_id: {
         type: Sequelize.STRING,
-        allowNull: false,
-        unique: true,
+        allowNull: true, // Benzersiz olmasın dediniz
       },
       notes: {
         type: Sequelize.TEXT,

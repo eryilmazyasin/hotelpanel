@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../config/database");
+const sequelize = require("../config/sequelize"); // Doğru sequelize nesnesi
 
 const Customer = sequelize.define(
   "Customer",
@@ -24,10 +24,6 @@ const Customer = sequelize.define(
     national_id: {
       type: DataTypes.STRING,
       allowNull: true,
-      unique: true,
-    },
-    notes: {
-      type: DataTypes.TEXT,
     },
   },
   {

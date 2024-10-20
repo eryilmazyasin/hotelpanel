@@ -1,7 +1,5 @@
-const Room = require("./room");
-const Customer = require("./customer");
 const { DataTypes } = require("sequelize");
-const sequelize = require("../config/database");
+const sequelize = require("../config/sequelize"); // Doğru sequelize nesnesi
 
 const Reservation = sequelize.define(
   "Reservation",
@@ -14,18 +12,6 @@ const Reservation = sequelize.define(
     room_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: Room, // Room modeline referans
-        key: "id",
-      },
-    },
-    customer_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: Customer, // Customer modeline referans
-        key: "id",
-      },
     },
     check_in_date: {
       type: DataTypes.DATEONLY,

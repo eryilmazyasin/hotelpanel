@@ -15,7 +15,7 @@ module.exports = {
       email: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true,
+        // Benzersiz constraint'i kaldırmak için unique: true silindi
       },
       password: {
         type: Sequelize.STRING,

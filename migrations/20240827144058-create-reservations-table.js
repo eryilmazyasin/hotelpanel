@@ -16,14 +16,6 @@ module.exports = {
           key: "id",
         },
       },
-      customer_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: "customers",
-          key: "id",
-        },
-      },
       check_in_date: {
         type: Sequelize.DATEONLY,
         allowNull: false,
@@ -40,12 +32,8 @@ module.exports = {
         type: Sequelize.DECIMAL(10, 2),
         allowNull: false,
       },
-      total_price: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
-      },
       price_per_night: {
-        type: DataTypes.DECIMAL(10, 2),
+        type: Sequelize.DECIMAL(10, 2),
         allowNull: true,
       },
       createdAt: {
