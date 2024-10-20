@@ -9,7 +9,7 @@ const ReservationCustomer = sequelize.define("ReservationCustomer", {
       model: "reservations",
       key: "id",
     },
-    onDelete: "CASCADE",
+    onDelete: "SET NULL", // Silme işlemi yapılırsa, ilişkili alan null yapılır
   },
   customer_id: {
     type: DataTypes.INTEGER,
@@ -17,7 +17,7 @@ const ReservationCustomer = sequelize.define("ReservationCustomer", {
       model: "customers",
       key: "id",
     },
-    onDelete: "CASCADE",
+    onDelete: "SET NULL", // Silme işlemi yapılırsa, ilişkili alan null yapılır
   },
 });
 

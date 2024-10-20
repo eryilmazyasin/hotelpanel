@@ -27,6 +27,11 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         defaultValue: true,
       },
+      is_reserved: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: true,
+        allowNull: false,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

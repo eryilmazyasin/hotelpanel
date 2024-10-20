@@ -33,6 +33,11 @@ const Reservation = sequelize.define(
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
     },
+    status: {
+      type: DataTypes.STRING, // Veya ENUM olarak tanımlayabilirsiniz
+      allowNull: false,
+      defaultValue: "active", // Varsayılan olarak 'active'
+    },
   },
   {
     tableName: "reservations",

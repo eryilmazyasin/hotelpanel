@@ -45,7 +45,12 @@ router.post("/", async (req, res) => {
       { where: { id: reservationData.room_id } }
     );
 
-    // 3. Müşterileri ekle veya güncelle
+    // 3. Mevcut müşteri ilişkilerini sil (ReservationCustomer'daki ilişkileri temizle)
+    await ReservationCustomer.destroy({
+      where: { reservation_id: reservation.id },
+    });
+
+    // 4. Müşterileri ekle veya güncelle
     const customerPromises = customersData.map(async (customerData) => {
       let customer;
 
@@ -149,6 +154,30 @@ router.delete("/:id", async (req, res) => {
       res.status(404).json({ error: "Reservation not found" });
     }
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Checkout işlemi - Odayı boşalt
+router.post("/:id/checkout", async (req, res) => {
+  try {
+    const reservation = await Reservation.findByPk(req.params.id);
+    if (!reservation) {
+      return res.status(404).json({ error: "Reservation not found" });
+    }
+
+    // 1. Oda durumunu güncelle (oda boşaltıldı)
+    await Room.update(
+      { is_reserved: false },
+      { where: { id: reservation.room_id } }
+    );
+
+    // 2. Rezervasyonun durumunu "completed" olarak değiştiriyoruz
+    await reservation.update({ status: "completed" });
+
+    res.json({ message: "Room is now available (Checkout completed)" });
+  } catch (err) {
+    console.error("Checkout işlemi başarısız:", err);
     res.status(500).json({ error: err.message });
   }
 });

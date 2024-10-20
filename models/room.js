@@ -28,6 +28,11 @@ const Room = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
+    is_reserved: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
+    },
   },
   {
     tableName: "rooms",

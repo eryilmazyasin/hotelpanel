@@ -9,22 +9,24 @@ router.get("/", async (req, res) => {
       include: {
         model: Reservation,
         as: "Reservations",
+        where: { status: "active" }, // Sadece aktif rezervasyonları getir
         required: false,
         attributes: [
-          "id", // Reservation ID'yi burada dahil ediyoruz
+          "id",
           "check_in_date",
           "check_out_date",
           "num_of_guests",
           "total_price",
           "price_per_night",
+          "createdAt", // Sıralama için kullanacağız
         ],
         include: [
           {
             model: Customer,
-            as: "reservationCustomers", // ReservationCustomer bağlantısını ekliyoruz
-            through: { attributes: [] }, // Ara tabloyu atlıyoruz
+            as: "reservationCustomers",
+            through: { attributes: [] },
             attributes: [
-              "id", // Müşteri ID'sini buraya ekliyoruz
+              "id",
               "first_name",
               "last_name",
               "phone_number",
@@ -32,14 +34,23 @@ router.get("/", async (req, res) => {
             ],
           },
         ],
+        order: [["createdAt", "DESC"]], // Rezervasyonları createdAt'e göre sıralıyoruz
       },
     });
 
-    // Verileri işleyip istenen yapıya dönüştürme
     const roomAvailability = rooms.map((room) => {
       const roomData = room.get({ plain: true });
 
-      // Oda bilgileri
+      // Eğer oda rezerve değilse, müşteri ve rezervasyon bilgilerini boş döndür
+      if (!roomData.is_reserved) {
+        return {
+          ...roomData,
+          Reservation: null,
+          Customers: [],
+        };
+      }
+
+      // Oda rezerve ise, en güncel rezervasyonu ve müşteri bilgilerini döndür
       const roomResponse = {
         id: roomData.id,
         room_number: roomData.room_number,
@@ -47,16 +58,14 @@ router.get("/", async (req, res) => {
         description: roomData.description,
         price_per_night: roomData.price_per_night,
         is_available: roomData.is_available,
-        isReserved: roomData.Reservations.length > 0, // Rezervasyon var mı?
-        Reservation: null, // İlk rezervasyonu buraya ekleyeceğiz
-        Customers: [], // Rezervasyonlardaki müşteriler buraya eklenecek
+        is_reserved: roomData.is_reserved,
+        Reservation: null,
+        Customers: [],
       };
 
-      // Tüm rezervasyonları eklemek yerine sadece ilk rezervasyonu alacağız
       if (roomData.Reservations.length > 0) {
-        const firstReservation = roomData.Reservations[0];
+        const firstReservation = roomData.Reservations[0]; // En güncel rezervasyon
 
-        // İlk rezervasyonu ekliyoruz
         roomResponse.Reservation = {
           id: firstReservation.id,
           room_id: firstReservation.room_id,
@@ -67,10 +76,9 @@ router.get("/", async (req, res) => {
           price_per_night: firstReservation.price_per_night,
         };
 
-        // Bu rezervasyona ait tüm müşterileri ekliyoruz
         firstReservation.reservationCustomers.forEach((customer) => {
           roomResponse.Customers.push({
-            id: customer.id, // Müşteri ID'sini buraya ekliyoruz
+            id: customer.id,
             first_name: customer.first_name,
             last_name: customer.last_name,
             phone_number: customer.phone_number,
@@ -80,66 +88,6 @@ router.get("/", async (req, res) => {
       }
 
       return roomResponse;
-    });
-
-    res.json(roomAvailability);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Get a single room by ID
-router.get("/", async (req, res) => {
-  try {
-    const rooms = await Room.findAll({
-      include: {
-        model: Reservation,
-        as: "Reservations",
-        required: false,
-        attributes: [
-          "id",
-          "check_in_date",
-          "check_out_date",
-          "num_of_guests",
-          "total_price",
-          "price_per_night",
-        ],
-        include: [
-          {
-            model: Customer,
-            as: "reservationCustomers", // ReservationCustomer bağlantısını ekliyoruz
-            through: { attributes: [] }, // Ara tabloyu atlıyoruz
-            attributes: [
-              "first_name",
-              "last_name",
-              "phone_number",
-              "national_id",
-            ],
-          },
-        ],
-      },
-    });
-
-    // Tüm odaları ve rezervasyonları işliyoruz
-    const roomAvailability = rooms.map((room) => {
-      const roomData = room.get({ plain: true });
-
-      if (roomData.Reservations.length > 0) {
-        const reservation = roomData.Reservations[0];
-        delete roomData.Reservations; // Gereksiz alanları silelim
-
-        return {
-          ...roomData,
-          isReserved: true, // Oda rezerve edilmiş mi?
-          Reservation: reservation, // Rezervasyonu ekle
-        };
-      } else {
-        return {
-          ...roomData,
-          isReserved: false, // Rezervasyon yoksa false döner
-          Reservation: null,
-        };
-      }
     });
 
     res.json(roomAvailability);
@@ -176,9 +124,23 @@ router.put("/:id", async (req, res) => {
 // Delete a room by ID
 router.delete("/:id", async (req, res) => {
   try {
-    const room = await Room.findByPk(req.params.id);
+    const room = await Room.findByPk(req.params.id, {
+      include: {
+        model: Reservation,
+        as: "Reservations",
+        where: { status: "active" }, // Sadece aktif rezervasyonları kontrol et
+        required: false,
+      },
+    });
+
+    if (room && room.Reservations.length > 0) {
+      return res
+        .status(400)
+        .json({ error: "Cannot delete a room with active reservations." });
+    }
+
     if (room) {
-      await room.destroy();
+      await room.destroy(); // Eğer aktif rezervasyon yoksa oda silinir
       res.json({ message: "Room deleted" });
     } else {
       res.status(404).json({ error: "Room not found" });

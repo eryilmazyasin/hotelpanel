@@ -3,21 +3,32 @@ const Reservation = require("./reservation");
 const Customer = require("./customer");
 const ReservationCustomer = require("./reservationCustomer");
 
-// Room ve Reservation arasında One-to-Many ilişkisi
-Room.hasMany(Reservation, { foreignKey: "room_id", as: "Reservations" });
-Reservation.belongsTo(Room, { foreignKey: "room_id", as: "Room" });
+// Room - Reservation İlişkisi (Bir oda birden fazla rezervasyona sahip olabilir)
+Room.hasMany(Reservation, {
+  as: "Reservations",
+  foreignKey: "room_id",
+  onDelete: "SET NULL", // Oda silindiğinde room_id NULL olacak
+});
+Reservation.belongsTo(Room, {
+  foreignKey: "room_id",
+  onDelete: "SET NULL", // Oda silindiğinde room_id NULL olacak
+});
 
-// Reservation ve Customer arasında Many-to-Many ilişkisi
+// Reservation - Customer İlişkisi
 Reservation.belongsToMany(Customer, {
   through: ReservationCustomer,
   as: "reservationCustomers",
   foreignKey: "reservation_id",
 });
-
 Customer.belongsToMany(Reservation, {
   through: ReservationCustomer,
   as: "customerReservations",
   foreignKey: "customer_id",
 });
 
-module.exports = { Room, Reservation, Customer, ReservationCustomer };
+module.exports = {
+  Room,
+  Reservation,
+  Customer,
+  ReservationCustomer,
+};
