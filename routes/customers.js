@@ -1,12 +1,68 @@
 const express = require("express");
 const router = express.Router();
+const { Op } = require("sequelize");
 const Customer = require("../models/customer");
+const Reservation = require("../models/reservation"); // Reservation modelini ekleyin
+const Room = require("../models/room"); // Room modelini ekleyin
 
 // Get all customers
 router.get("/", async (req, res) => {
   try {
     const customers = await Customer.findAll();
     res.json(customers);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get all customers with their reservation and room details
+router.get("/with-reservations", async (req, res) => {
+  const { search, page = 1 } = req.query; // Sayfa numarası ve arama terimi
+  const limit = 50; // Her sayfada 50 kayıt dönecek
+  const offset = (page - 1) * limit; // Sayfaya göre ofset hesaplama
+
+  try {
+    const whereCondition = search
+      ? {
+          [Op.or]: [
+            { first_name: { [Op.like]: `%${search}%` } },
+            { phone_number: { [Op.like]: `%${search}%` } },
+            { national_id: { [Op.like]: `%${search}%` } },
+          ],
+        }
+      : {};
+
+    const { rows: customers, count: total } = await Customer.findAndCountAll({
+      where: whereCondition,
+      offset,
+      limit,
+      include: [
+        {
+          model: Reservation,
+          as: "customerReservations",
+          include: [
+            {
+              model: Room,
+              as: "room",
+              attributes: ["room_number", "room_type"],
+            },
+          ],
+          attributes: [
+            "check_in_date",
+            "check_out_date",
+            "price_per_night",
+            "total_price",
+          ],
+        },
+      ],
+    });
+
+    res.json({
+      data: customers,
+      total, // Toplam müşteri sayısı
+      page: parseInt(page, 10),
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

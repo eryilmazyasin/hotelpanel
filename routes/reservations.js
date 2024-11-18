@@ -20,7 +20,22 @@ router.get("/", async (req, res) => {
 // Get a single reservation by ID
 router.get("/:id", async (req, res) => {
   try {
-    const reservation = await Reservation.findByPk(req.params.id);
+    const reservation = await Reservation.findByPk(req.params.id, {
+      include: [
+        {
+          model: Room,
+          as: "Room", // Alias 'Room' kullanılıyor
+          attributes: ["room_number", "room_type"],
+        },
+        {
+          model: Customer,
+          as: "reservationCustomers", // Alias 'reservationCustomers' kullanılıyor
+          through: { attributes: [] },
+          attributes: ["first_name", "last_name"],
+        },
+      ],
+    });
+
     if (reservation) {
       res.json(reservation);
     } else {
