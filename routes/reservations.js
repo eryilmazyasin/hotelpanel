@@ -176,21 +176,24 @@ router.delete("/:id", async (req, res) => {
 // Checkout işlemi - Odayı boşalt
 router.post("/:id/checkout", async (req, res) => {
   try {
+    // 1. Rezervasyonu bulun
     const reservation = await Reservation.findByPk(req.params.id);
     if (!reservation) {
       return res.status(404).json({ error: "Reservation not found" });
     }
 
-    // 1. Oda durumunu güncelle (oda boşaltıldı)
+    // 2. Oda durumunu güncelle (is_available: 0 ve is_reserved: false)
     await Room.update(
-      { is_reserved: false },
+      { is_reserved: false, is_available: 0 }, // Hem is_reserved hem de is_available güncelleniyor
       { where: { id: reservation.room_id } }
     );
 
-    // 2. Rezervasyonun durumunu "completed" olarak değiştiriyoruz
+    // 3. Rezervasyonun durumunu "completed" olarak güncelle
     await reservation.update({ status: "completed" });
 
-    res.json({ message: "Room is now available (Checkout completed)" });
+    res.json({
+      message: "Checkout completed. Room is now marked as unavailable.",
+    });
   } catch (err) {
     console.error("Checkout işlemi başarısız:", err);
     res.status(500).json({ error: err.message });

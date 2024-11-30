@@ -66,13 +66,28 @@ router.get("/", async (req, res) => {
       if (roomData.Reservations.length > 0) {
         const firstReservation = roomData.Reservations[0]; // En güncel rezervasyon
 
+        // Gece sayısını hesaplama
+        const checkInDate = new Date(firstReservation.check_in_date);
+        const checkOutDate = new Date(firstReservation.check_out_date);
+        const stayDuration =
+          Math.ceil(
+            (checkOutDate.getTime() - checkInDate.getTime()) /
+              (1000 * 60 * 60 * 24)
+          ) || 1; // Eğer aynı günse en az 1 gece varsayıyoruz
+
+        // total_price hesaplama
+        const totalPrice =
+          stayDuration *
+          Number(firstReservation.price_per_night) *
+          firstReservation.num_of_guests;
+
         roomResponse.Reservation = {
           id: firstReservation.id,
           room_id: firstReservation.room_id,
           check_in_date: firstReservation.check_in_date,
           check_out_date: firstReservation.check_out_date,
           num_of_guests: firstReservation.num_of_guests,
-          total_price: firstReservation.total_price,
+          total_price: totalPrice, // Güncel total_price
           price_per_night: firstReservation.price_per_night,
         };
 

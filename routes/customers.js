@@ -51,14 +51,42 @@ router.get("/with-reservations", async (req, res) => {
             "check_in_date",
             "check_out_date",
             "price_per_night",
-            "total_price",
+            "num_of_guests",
           ],
         },
       ],
     });
 
+    // Dinamik olarak total_price hesaplama
+    const enrichedCustomers = customers.map((customer) => {
+      const customerData = customer.get({ plain: true });
+
+      customerData.customerReservations = customerData.customerReservations.map(
+        (reservation) => {
+          // Gece sayısını hesapla
+          const checkInDate = new Date(reservation.check_in_date);
+          const checkOutDate = new Date(reservation.check_out_date);
+          const stayDuration =
+            Math.ceil(
+              (checkOutDate.getTime() - checkInDate.getTime()) /
+                (1000 * 60 * 60 * 24)
+            ) || 1; // Eğer aynı günse en az 1 gece varsayıyoruz
+
+          // Toplam fiyat hesapla
+          const pricePerNight = Number(reservation.price_per_night) || 0;
+          const numOfGuests = reservation.num_of_guests || 1; // Varsayılan 1 kişi
+          const totalPrice = stayDuration * pricePerNight * numOfGuests; // totalPrice değişkenini burada hesaplıyoruz
+          reservation.total_price = totalPrice.toFixed(2); // Burada doğru değişkeni kullanıyoruz
+
+          return reservation;
+        }
+      );
+
+      return customerData;
+    });
+
     res.json({
-      data: customers,
+      data: enrichedCustomers,
       total, // Toplam müşteri sayısı
       page: parseInt(page, 10),
       totalPages: Math.ceil(total / limit),
